@@ -400,10 +400,29 @@ export default function MarkdownViewer() {
   // listen for menu events
   useEffect(() => {
     if (!window.electronAPI) return;
+    if (window.electronAPI.onMenuNewFile) {
+      window.electronAPI.onMenuNewFile(() => addTab());
+    }
     window.electronAPI.onMenuSave(() => handleSave());
+    if (window.electronAPI.onMenuSaveAs) {
+      window.electronAPI.onMenuSaveAs(async () => {
+        const result = await window.electronAPI.saveFileDialog(md);
+        if (result?.success) {
+          setFilePath(result.path);
+          setFileName(result.name);
+          setDirty(false);
+        }
+      });
+    }
     window.electronAPI.onMenuAbout(() => setShowAbout(true));
     if (window.electronAPI.onMenuHelp) {
       window.electronAPI.onMenuHelp(() => setShowHelp(true));
+    }
+    if (window.electronAPI.onMenuExportPdf) {
+      window.electronAPI.onMenuExportPdf(() => {
+        setMode("preview");
+        setTimeout(() => window.electronAPI.exportPdf(), 300);
+      });
     }
   }, []);
 
@@ -597,7 +616,18 @@ export default function MarkdownViewer() {
       case "h2": insertAtLineStart("## "); break;
       case "h3": insertAtLineStart("### "); break;
       case "link": insertLink(); break;
-      case "image": insertText("![alt](url)"); break;
+      case "image":
+        if (window.electronAPI?.openImageDialog) {
+          window.electronAPI.openImageDialog().then(path => {
+            if (path) {
+              const name = path.replace(/\\/g, "/").split("/").pop();
+              insertText(`![${name}](${path.replace(/\\/g, "/")})`);
+            }
+          });
+        } else {
+          insertText("![alt](url)");
+        }
+        break;
       case "code": wrapSelection("`", "`"); break;
       case "codeblock": insertText("\n```\n\n```\n"); break;
       case "ul": insertAtLineStart("- "); break;
@@ -717,11 +747,16 @@ export default function MarkdownViewer() {
       {showAbout && (
         <div style={s.aboutOverlay} onClick={() => setShowAbout(false)}>
           <div style={s.aboutBox} onClick={e => e.stopPropagation()}>
-            <img src="/build-resources/icon.png" alt="MarkMoose" style={{ width: 80, height: 80, marginBottom: 8, objectFit: "contain" }} />
+            <img src="./icon.png" alt="MarkMoose" style={{ width: 80, height: 80, marginBottom: 8, objectFit: "contain" }} />
             <div style={{ fontSize: 22, fontWeight: 700, color: t.text }}>MarkMoose</div>
             <div style={{ fontSize: 13, color: t.textSec, marginBottom: 12 }}>Markdown Editor</div>
             <div style={{ fontSize: 12, color: t.textTer, marginBottom: 4 }}>Version {appVersion}</div>
-            <div style={{ fontSize: 12, color: t.textTer, marginBottom: 20 }}>by Morten Rasmussen</div>
+            <div style={{ fontSize: 12, color: t.textTer, marginBottom: 16 }}>by Morten Rasmussen</div>
+            <a
+              href="ms-windows-store://review/?productid=9NJPG77756D4"
+              style={{ fontSize: 12, color: t.accent, textDecoration: "none", marginBottom: 16, cursor: "pointer" }}
+              onClick={(e) => { e.preventDefault(); window.electronAPI?.openExternal("ms-windows-store://review/?productid=9NJPG77756D4"); }}
+            >Enjoying MarkMoose? Rate us in the Store</a>
             <button style={s.aboutCloseBtn} onClick={() => setShowAbout(false)}>Close</button>
           </div>
         </div>
@@ -738,7 +773,7 @@ export default function MarkdownViewer() {
                 {[
                   ["Ctrl+S", "Save file"], ["Ctrl+O", "Open file"], ["Ctrl+N", "New window"],
                   ["Ctrl+B", "Bold selection"], ["Ctrl+I", "Italic selection"], ["Ctrl+K", "Insert link"],
-                  ["Ctrl++", "Zoom in"], ["Ctrl+-", "Zoom out"], ["Ctrl+0", "Reset zoom"], ["F11", "Fullscreen"],
+                  ["Ctrl+P", "Print"], ["Ctrl++", "Zoom in"], ["Ctrl+-", "Zoom out"], ["Ctrl+0", "Reset zoom"], ["F11", "Fullscreen"],
                 ].map(([key, desc]) => (
                   <div key={key} style={s.helpRow}>
                     <kbd style={s.kbd}>{key}</kbd>
@@ -773,6 +808,7 @@ export default function MarkdownViewer() {
                 <div>Drag & drop .md files to open</div>
                 <div>.md / .markdown file association on Windows</div>
                 <div>Unsaved changes prompt on close</div>
+                <div>Print and Export to PDF</div>
                 <div>Word and line count</div>
               </div>
             </div>
@@ -782,7 +818,7 @@ export default function MarkdownViewer() {
       )}
 
       {/* toolbar */}
-      <div style={s.toolbar}>
+      <div className="no-print" style={s.toolbar}>
         <div style={s.toolbarLeft}>
           <button style={s.tocBtn} onClick={() => setTocOpen(o => !o)} title="Toggle outline">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="10" y2="18"/></svg>
@@ -811,8 +847,8 @@ export default function MarkdownViewer() {
           <button style={s.iconBtn} onClick={() => setShowHelp(true)} title="Help">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
           </button>
-          <button style={s.iconBtn} onClick={() => setShowAbout(true)} title="About">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <button style={s.iconBtn} onClick={() => { if (window.electronAPI?.openExternal) window.electronAPI.openExternal("ms-windows-store://review/?productid=9NJPG77756D4"); }} title="Rate in Store">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#F7AF0F" stroke="#F7AF0F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           </button>
           <button style={s.uploadBtn} onClick={handleOpenFile}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -826,7 +862,7 @@ export default function MarkdownViewer() {
       </div>
 
       {/* tab bar */}
-      <div style={s.tabBar}>
+      <div className="no-print" style={s.tabBar}>
         {tabs.map(t => (
           <div
             key={t.id}
@@ -848,7 +884,7 @@ export default function MarkdownViewer() {
       <div style={s.main} ref={mainRef}>
         {/* TOC sidebar */}
         {tocOpen && headings.length > 0 && (
-          <div style={s.toc}>
+          <div className="no-print" style={s.toc}>
             <div style={s.tocHeader}>Outline</div>
             <div style={s.tocList}>
               {headings.map((h, i) => (
@@ -868,7 +904,7 @@ export default function MarkdownViewer() {
 
         {/* editor */}
         {(mode === "edit" || mode === "split") && (
-          <div style={{
+          <div className="no-print" style={{
             ...s.pane,
             cursor: "text",
             ...(mode === "split" ? { width: `${splitPos}%`, flex: "none" } : {}),
@@ -901,7 +937,7 @@ export default function MarkdownViewer() {
 
         {/* split handle */}
         {mode === "split" && (
-          <div style={s.splitHandle} onMouseDown={onSplitMouseDown} />
+          <div className="no-print" style={s.splitHandle} onMouseDown={onSplitMouseDown} />
         )}
 
         {/* preview */}
@@ -909,7 +945,7 @@ export default function MarkdownViewer() {
           <div style={{
             overflow: "auto", minWidth: 0, cursor: "default",
             ...(mode === "split" ? { width: `${100 - splitPos}%` } : { flex: 1 }),
-          }} ref={previewRef} onScroll={onPreviewScroll}>
+          }} className="print-only" ref={previewRef} onScroll={onPreviewScroll}>
             <div className="md-preview" style={s.preview} dangerouslySetInnerHTML={{ __html: rendered }} />
           </div>
         )}
@@ -1033,6 +1069,33 @@ function getCssText(t) {
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: ${t.scrollThumb}; border-radius: 4px; cursor: default; }
   ::-webkit-scrollbar-thumb:hover { background: ${t.textTer}; }
+
+  @media print {
+    body, html, #root, #root > div {
+      height: auto !important; max-height: none !important;
+      overflow: visible !important; display: block !important;
+    }
+    .no-print { display: none !important; }
+    .md-preview {
+      padding: 20px !important; max-width: 100% !important;
+      color: #000 !important;
+    }
+    .md-preview h1, .md-preview h2, .md-preview h3,
+    .md-preview h4, .md-preview h5, .md-preview h6,
+    .md-preview p, .md-preview li, .md-preview td, .md-preview th {
+      color: #000 !important;
+    }
+    .md-preview .code-block { break-inside: avoid; }
+    .md-preview .md-table { break-inside: avoid; }
+    .md-preview .mermaid-block { break-inside: avoid; }
+    .print-only {
+      display: block !important; overflow: visible !important;
+      height: auto !important; max-height: none !important;
+      width: 100% !important; flex: none !important;
+      position: static !important;
+    }
+    .print-only * { overflow: visible !important; max-height: none !important; }
+  }
 `;
 }
 

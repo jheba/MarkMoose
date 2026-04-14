@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MarkMoose — The Markdown Editor for Windows</title>
+<link rel="icon" type="image/png" href="icon.png">
+<meta name="description" content="A fast, distraction-free Markdown editor for Windows. Live preview, dark mode, syntax highlighting, Mermaid diagrams, and tabs. Free and open source.">
+<meta property="og:title" content="MarkMoose — The Markdown Editor for Windows">
+<meta property="og:description" content="A fast, distraction-free Markdown editor with live preview, tabs, dark mode, and Mermaid diagrams. Built with Electron + React.">
+<meta property="og:image" content="https://mortenra.github.io/MarkMoose/icon.png">
+<meta property="og:url" content="https://mortenra.github.io/MarkMoose/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MarkMoose — The Markdown Editor for Windows">
+<meta name="twitter:description" content="Fast, distraction-free Markdown editor for Windows. Free and open source.">
+<meta name="twitter:image" content="https://mortenra.github.io/MarkMoose/icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c0b0f;
+    --surface: #16151a;
+    --surface-2: #1e1d23;
+    --border: #2a2930;
+    --text: #e8e6ed;
+    --text-dim: #9490a0;
+    --accent: #c5f467;
+    --accent-dim: #8aad3e;
+    --warm: #f4a261;
+    --moose: #d4845a;
+    --code-bg: #1a1920;
+    --radius: 16px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* --- GRAIN OVERLAY --- */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* --- NAV --- */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    padding: 20px 48px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    backdrop-filter: blur(20px);
+    background: rgba(12, 11, 15, 0.8);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'Instrument Serif', serif;
+    font-size: 24px;
+    letter-spacing: -0.5px;
+    text-decoration: none;
+    color: var(--text);
+  }
+
+  .nav-brand .moose-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    object-fit: contain;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 36px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--accent); }
+
+  .btn-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 24px;
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 700;
+    font-size: 14px;
+    border-radius: 100px;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    letter-spacing: 0.2px;
+  }
+
+  .btn-download:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(197, 244, 103, 0.25);
+  }
+
+  .btn-download svg {
+    width: 16px; height: 16px;
+  }
+
+  /* --- HERO --- */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 140px 48px 80px;
+    position: relative;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -200px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba(197, 244, 103, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-mascot {
+    width: 160px;
+    height: 160px;
+    object-fit: contain;
+    margin-bottom: 32px;
+    animation: mascotFloat 3s ease-in-out infinite, fadeUp 0.8s ease both;
+    filter: drop-shadow(0 20px 40px rgba(0,0,0,0.4));
+  }
+
+  @keyframes mascotFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px 6px 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 40px;
+    animation: fadeUp 0.8s ease both;
+  }
+
+  .hero-badge .dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .hero h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(56px, 8vw, 112px);
+    line-height: 0.95;
+    letter-spacing: -3px;
+    max-width: 900px;
+    animation: fadeUp 0.8s ease 0.1s both;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    font-size: 19px;
+    color: var(--text-dim);
+    max-width: 520px;
+    line-height: 1.65;
+    margin-top: 32px;
+    animation: fadeUp 0.8s ease 0.2s both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 48px;
+    animation: fadeUp 0.8s ease 0.3s both;
+  }
+
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 24px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 14px;
+    border-radius: 100px;
+    text-decoration: none;
+    transition: border-color 0.2s, color 0.2s;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--text-dim);
+    color: var(--text);
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* --- EDITOR PREVIEW --- */
+  .editor-preview {
+    max-width: 960px;
+    margin: 0 auto 0;
+    padding: 0 48px;
+    animation: fadeUp 0.8s ease 0.45s both;
+  }
+
+  .editor-window {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow:
+      0 24px 80px rgba(0,0,0,0.5),
+      0 0 0 1px rgba(255,255,255,0.03) inset;
+  }
+
+  .editor-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--code-bg);
+  }
+
+  .editor-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .editor-dot:nth-child(1) { background: #ff5f57; }
+  .editor-dot:nth-child(2) { background: #febc2e; }
+  .editor-dot:nth-child(3) { background: #28c840; }
+
+  .editor-filename {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-left: 12px;
+  }
+
+  .editor-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 340px;
+  }
+
+  .editor-source {
+    padding: 28px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    line-height: 1.85;
+    color: var(--text-dim);
+    border-right: 1px solid var(--border);
+    background: var(--code-bg);
+  }
+
+  .editor-source .md-h1 { color: var(--accent); font-weight: 600; }
+  .editor-source .md-h2 { color: var(--warm); font-weight: 600; }
+  .editor-source .md-bold { color: var(--text); font-weight: 600; }
+  .editor-source .md-link { color: #7cabf0; }
+  .editor-source .md-code { background: rgba(197,244,103,0.08); padding: 2px 6px; border-radius: 4px; color: var(--accent); }
+
+  .editor-rendered {
+    padding: 28px 32px;
+    line-height: 1.7;
+    background: var(--surface);
+  }
+
+  .editor-rendered h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 28px;
+    letter-spacing: -0.5px;
+    margin-bottom: 12px;
+    font-weight: 400;
+  }
+
+  .editor-rendered h2 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    color: var(--warm);
+    margin-top: 20px;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  .editor-rendered p {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+
+  .editor-rendered code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: var(--code-bg);
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: var(--accent);
+  }
+
+  .editor-rendered ul {
+    font-size: 14px;
+    color: var(--text-dim);
+    padding-left: 20px;
+    margin-bottom: 10px;
+  }
+
+  .editor-rendered ul li { margin-bottom: 4px; }
+  .editor-rendered ul li::marker { color: var(--accent); }
+
+  /* --- FEATURES --- */
+  .features {
+    padding: 140px 48px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .features-header {
+    text-align: center;
+    margin-bottom: 80px;
+  }
+
+  .features-header h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(36px, 5vw, 56px);
+    letter-spacing: -1.5px;
+  }
+
+  .features-header p {
+    color: var(--text-dim);
+    font-size: 17px;
+    margin-top: 16px;
+    max-width: 480px;
+    margin-inline: auto;
+    line-height: 1.6;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+
+  .feature-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px 32px;
+    transition: border-color 0.3s, transform 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feature-card:hover {
+    border-color: var(--accent-dim);
+    transform: translateY(-4px);
+  }
+
+  .feature-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .feature-card:hover::after { opacity: 1; }
+
+  .feature-icon {
+    width: 48px; height: 48px;
+    background: rgba(197, 244, 103, 0.08);
+    border: 1px solid rgba(197, 244, 103, 0.15);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+
+  .feature-card h3 {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: -0.3px;
+  }
+
+  .feature-card p {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.65;
+  }
+
+  /* --- SHOWCASE SPLIT --- */
+  .showcase {
+    padding: 80px 48px 140px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .showcase-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: center;
+    margin-bottom: 100px;
+  }
+
+  .showcase-row:last-child { margin-bottom: 0; }
+
+  .showcase-text h3 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 40px;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+
+  .showcase-text p {
+    font-size: 16px;
+    color: var(--text-dim);
+    line-height: 1.65;
+  }
+
+  .showcase-visual {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    min-height: 260px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .file-assoc-demo {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+  }
+
+  .file-icon {
+    width: 80px; height: 100px;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+
+  .file-icon:hover {
+    border-color: var(--accent);
+    box-shadow: 0 0 24px rgba(197,244,103,0.1);
+  }
+
+  .file-icon .ext {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+  }
+
+  .file-icon .label {
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  .arrow-icon {
+    color: var(--text-dim);
+    font-size: 24px;
+    animation: arrowPulse 1.5s ease infinite;
+  }
+
+  @keyframes arrowPulse {
+    0%, 100% { opacity: 0.3; transform: translateX(0); }
+    50% { opacity: 1; transform: translateX(4px); }
+  }
+
+  .moose-logo-mini {
+    width: 72px; height: 72px;
+    border-radius: 16px;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 16px rgba(0,0,0,0.3));
+  }
+
+  .shortcut-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .shortcut-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: var(--code-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+
+  .shortcut-item .action {
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  .shortcut-item kbd {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    background: var(--surface-2);
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    color: var(--accent);
+  }
+
+  /* --- CTA --- */
+  .cta {
+    text-align: center;
+    padding: 120px 48px;
+    position: relative;
+  }
+
+  .cta::before {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 50%;
+    transform: translateX(-50%);
+    width: 600px; height: 600px;
+    background: radial-gradient(circle, rgba(197,244,103,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cta-mascot {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+    margin-bottom: 24px;
+    filter: drop-shadow(0 12px 24px rgba(0,0,0,0.4));
+    animation: mascotFloat 3s ease-in-out 0.5s infinite;
+  }
+
+  .cta h2 {
+    font-family: 'Instrument Serif', serif;
+    font-size: clamp(40px, 6vw, 72px);
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 20px;
+  }
+
+  .cta h2 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .cta p {
+    font-size: 17px;
+    color: var(--text-dim);
+    margin-bottom: 40px;
+    max-width: 400px;
+    margin-inline: auto;
+    line-height: 1.6;
+  }
+
+  .cta .btn-download {
+    font-size: 16px;
+    padding: 14px 36px;
+  }
+
+  .ms-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+    padding: 10px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-dim);
+    font-size: 13px;
+    text-decoration: none;
+    transition: border-color 0.2s;
+  }
+
+  .ms-badge:hover { border-color: var(--text-dim); }
+
+  .ms-badge svg { width: 20px; height: 20px; }
+
+  /* --- FOOTER --- */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  footer p {
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+
+  footer a {
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  footer a:hover { color: var(--accent); }
+
+  .footer-links {
+    display: flex;
+    gap: 24px;
+    list-style: none;
+    font-size: 13px;
+  }
+
+  /* --- RESPONSIVE --- */
+  @media (max-width: 768px) {
+    nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+    .hero { padding: 120px 24px 60px; }
+    .hero h1 { letter-spacing: -1.5px; }
+    .hero-actions { flex-direction: column; align-items: center; }
+    .editor-preview { padding: 0 24px; }
+    .editor-body { grid-template-columns: 1fr; }
+    .editor-source { border-right: none; border-bottom: 1px solid var(--border); }
+    .features { padding: 80px 24px; }
+    .features-grid { grid-template-columns: 1fr; }
+    .showcase { padding: 40px 24px 80px; }
+    .showcase-row { grid-template-columns: 1fr; gap: 32px; }
+    .cta { padding: 80px 24px; }
+    footer { padding: 32px 24px; flex-direction: column; gap: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-brand">
+    <img src="icon.png" alt="MarkMoose" class="moose-icon">
+    MarkMoose
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#showcase">Why MarkMoose</a></li>
+    <li><a href="https://github.com/MortenRa/MarkMoose" target="_blank">GitHub</a></li>
+  </ul>
+  <a href="#download" class="btn-download">
+    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 12l-4-4h2.5V3h3v5H12L8 12z"/><path d="M3 13h10v1H3z"/></svg>
+    Download Free
+  </a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <img src="icon.png" alt="MarkMoose mascot" class="hero-mascot">
+  <div class="hero-badge">
+    <span class="dot"></span>
+    Now available for Windows 10 & 11
+  </div>
+  <h1>Write in<br>Mark<em>down.</em></h1>
+  <p class="hero-sub">A fast, distraction-free Markdown editor for Windows. Beautiful live preview. Native <code>.md</code> file support. Nothing more, nothing less.</p>
+  <div class="hero-actions">
+    <a href="#download" class="btn-download">
+      <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 12l-4-4h2.5V3h3v5H12L8 12z"/><path d="M3 13h10v1H3z"/></svg>
+      Get from Microsoft Store
+    </a>
+    <a href="#features" class="btn-secondary">See Features →</a>
+  </div>
+</section>
+
+<!-- EDITOR PREVIEW -->
+<div class="editor-preview">
+  <div class="editor-window">
+    <div class="editor-titlebar">
+      <span class="editor-dot"></span>
+      <span class="editor-dot"></span>
+      <span class="editor-dot"></span>
+      <span class="editor-filename">readme.md</span>
+    </div>
+    <div class="editor-body">
+      <div class="editor-source">
+        <span class="md-h1"># Welcome to MarkMoose</span><br><br>
+        <span class="md-h2">## Getting Started</span><br><br>
+        Just open any <span class="md-code">`&#46;md`</span> file and<br>
+        start writing. It's that simple.<br><br>
+        - <span class="md-bold">**Live preview**</span> as you type<br>
+        - <span class="md-bold">**Syntax highlighting**</span> built in<br>
+        - <span class="md-bold">**Zero config**</span> — works instantly<br><br>
+        <span class="md-link">[Learn more →](https://...)</span>
+      </div>
+      <div class="editor-rendered">
+        <h1>Welcome to MarkMoose</h1>
+        <h2>Getting Started</h2>
+        <p>Just open any <code>.md</code> file and start writing. It's that simple.</p>
+        <ul>
+          <li><strong>Live preview</strong> as you type</li>
+          <li><strong>Syntax highlighting</strong> built in</li>
+          <li><strong>Zero config</strong> — works instantly</li>
+        </ul>
+        <p style="color: #7cabf0;">Learn more →</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="features-header">
+    <h2>Everything you need,<br>nothing you don't</h2>
+    <p>Built for writers and developers who value simplicity and speed.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">👁</div>
+      <h3>Live Preview</h3>
+      <p>Side-by-side editing and rendered preview. See your Markdown come alive as you type — headers, code, lists, links.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📑</div>
+      <h3>Tabs</h3>
+      <p>Work on multiple files at once with a tabbed interface. Switch between documents without losing your place.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🎨</div>
+      <h3>Syntax Highlighting</h3>
+      <p>Rich color-coded Markdown syntax makes your source readable. Headings, bold, code blocks — all visually distinct.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🧜‍♀️</div>
+      <h3>Mermaid Diagrams</h3>
+      <p>Write flowcharts, sequence diagrams, and more in Markdown. MarkMoose renders Mermaid blocks right in the preview.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🌙</div>
+      <h3>Dark Mode</h3>
+      <p>A carefully crafted dark interface that's easy on your eyes during long writing sessions. Because you deserve better than blinding white.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📄</div>
+      <h3>Native .md Files</h3>
+      <p>Double-click any <code>.md</code> file and it opens in MarkMoose. Full Windows file association — it just works.</p>
+    </div>
+  </div>
+</section>
+
+<!-- SHOWCASE -->
+<section class="showcase" id="showcase">
+  <div class="showcase-row">
+    <div class="showcase-text">
+      <h3>Double-click<br>and write</h3>
+      <p>MarkMoose registers as the default handler for <code>.md</code> files on Windows. No need to open an app first — just double-click your file and you're in.</p>
+    </div>
+    <div class="showcase-visual">
+      <div class="file-assoc-demo">
+        <div class="file-icon">
+          <span class="ext">.md</span>
+          <span class="label">readme</span>
+        </div>
+        <div class="file-icon">
+          <span class="ext">.md</span>
+          <span class="label">notes</span>
+        </div>
+        <span class="arrow-icon">→</span>
+        <img src="icon.png" alt="MarkMoose" class="moose-logo-mini">
+      </div>
+    </div>
+  </div>
+  <div class="showcase-row">
+    <div class="showcase-visual">
+      <div class="shortcut-grid">
+        <div class="shortcut-item">
+          <span class="action">Save</span>
+          <kbd>Ctrl+S</kbd>
+        </div>
+        <div class="shortcut-item">
+          <span class="action">New File</span>
+          <kbd>Ctrl+N</kbd>
+        </div>
+        <div class="shortcut-item">
+          <span class="action">Open</span>
+          <kbd>Ctrl+O</kbd>
+        </div>
+        <div class="shortcut-item">
+          <span class="action">Bold</span>
+          <kbd>Ctrl+B</kbd>
+        </div>
+        <div class="shortcut-item">
+          <span class="action">Italic</span>
+          <kbd>Ctrl+I</kbd>
+        </div>
+        <div class="shortcut-item">
+          <span class="action">Preview</span>
+          <kbd>Ctrl+P</kbd>
+        </div>
+      </div>
+    </div>
+    <div class="showcase-text">
+      <h3>Keyboard-first,<br>always</h3>
+      <p>Every action has a shortcut. MarkMoose stays out of your way and lets your fingers do the thinking. Built for people who type faster than they click.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta" id="download">
+  <img src="icon.png" alt="MarkMoose" class="cta-mascot">
+  <h2>Ready to<br><em>write?</em></h2>
+  <p>Free, fast, and focused. Download MarkMoose and make Markdown feel right on Windows.</p>
+  <a href="#" class="btn-download">
+    <svg viewBox="0 0 16 16" fill="currentColor"><path d="M8 12l-4-4h2.5V3h3v5H12L8 12z"/><path d="M3 13h10v1H3z"/></svg>
+    Download for Windows
+  </a>
+  <br>
+  <a href="#" class="ms-badge">
+    <svg viewBox="0 0 21 21" fill="currentColor"><rect x="1" y="1" width="9" height="9"/><rect x="11" y="1" width="9" height="9"/><rect x="1" y="11" width="9" height="9"/><rect x="11" y="11" width="9" height="9"/></svg>
+    Also on Microsoft Store
+  </a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>© 2026 MarkMoose. Built with care in Denmark.</p>
+  <ul class="footer-links">
+    <li><a href="#">Privacy</a></li>
+    <li><a href="https://github.com/MortenRa/MarkMoose">GitHub</a></li>
+    <li><a href="#">Contact</a></li>
+  </ul>
+</footer>
+
+</body>
+</html>

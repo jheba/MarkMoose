@@ -12,6 +12,12 @@ contextBridge.exposeInMainWorld("electronAPI", {
   getVersion: () => ipcRenderer.invoke("get-version"),
   showSavePrompt: () => ipcRenderer.invoke("show-save-prompt"),
   confirmClose: () => ipcRenderer.send("safe-to-close"),
+  openExternal: (url) => ipcRenderer.invoke("open-external", url),
+  openImageDialog: () => ipcRenderer.invoke("open-image-dialog"),
+  onMenuNewFile: (callback) => {
+    ipcRenderer.removeAllListeners("menu-new-file");
+    ipcRenderer.on("menu-new-file", () => callback());
+  },
   onMenuSave: (callback) => {
     ipcRenderer.removeAllListeners("menu-save");
     ipcRenderer.on("menu-save", () => callback());
@@ -27,5 +33,19 @@ contextBridge.exposeInMainWorld("electronAPI", {
   onCheckBeforeClose: (callback) => {
     ipcRenderer.removeAllListeners("check-before-close");
     ipcRenderer.on("check-before-close", () => callback());
+  },
+  print: () => ipcRenderer.invoke("print"),
+  exportPdf: () => ipcRenderer.invoke("export-pdf"),
+  onMenuSaveAs: (callback) => {
+    ipcRenderer.removeAllListeners("menu-save-as");
+    ipcRenderer.on("menu-save-as", () => callback());
+  },
+  onMenuPrint: (callback) => {
+    ipcRenderer.removeAllListeners("menu-print");
+    ipcRenderer.on("menu-print", () => callback());
+  },
+  onMenuExportPdf: (callback) => {
+    ipcRenderer.removeAllListeners("menu-export-pdf");
+    ipcRenderer.on("menu-export-pdf", () => callback());
   },
 });

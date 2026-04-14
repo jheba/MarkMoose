@@ -93,11 +93,27 @@ function createWindow() {
     {
       label: "File",
       submenu: [
+        {
+          label: "New File",
+          accelerator: "CmdOrCtrl+T",
+          click: () => mainWindow?.webContents.send("menu-new-file"),
+        },
         { label: "Open File...", accelerator: "CmdOrCtrl+O", click: () => handleOpenFile() },
         {
           label: "Save",
           accelerator: "CmdOrCtrl+S",
           click: () => mainWindow?.webContents.send("menu-save"),
+        },
+        {
+          label: "Save As...",
+          accelerator: "CmdOrCtrl+Shift+S",
+          click: () => mainWindow?.webContents.send("menu-save-as"),
+        },
+        { type: "separator" },
+        {
+          label: "Export to PDF...",
+          accelerator: "CmdOrCtrl+P",
+          click: () => mainWindow?.webContents.send("menu-export-pdf"),
         },
         { type: "separator" },
         { label: "New Window", accelerator: "CmdOrCtrl+N", click: () => createWindow() },
@@ -129,6 +145,14 @@ function createWindow() {
         },
         { type: "separator" },
         {
+          label: "Rate in Microsoft Store",
+          click: () => {
+            const { shell } = require("electron");
+            shell.openExternal("ms-windows-store://review/?productid=9NJPG77756D4");
+          },
+        },
+        { type: "separator" },
+        {
           label: "About MarkMoose",
           click: () => mainWindow?.webContents.send("menu-about"),
         },
@@ -149,7 +173,7 @@ function createWindow() {
         sendFileToRenderer(fileToOpen);
         fileToOpen = null;
       }
-    }, 3000);
+    }, 2000);
   });
 
   // Prompt to save on close
@@ -266,6 +290,47 @@ ipcMain.handle("save-file-dialog", async (_event, content) => {
 
 ipcMain.handle("get-version", () => {
   return app.getVersion();
+});
+
+ipcMain.handle("open-image-dialog", async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title: "Insert Image",
+    filters: [
+      { name: "Images", extensions: ["png", "jpg", "jpeg", "gif", "svg", "webp", "bmp"] },
+      { name: "All Files", extensions: ["*"] },
+    ],
+    properties: ["openFile"],
+  });
+  if (!result.canceled && result.filePaths.length > 0) {
+    return result.filePaths[0];
+  }
+  return null;
+});
+
+ipcMain.handle("open-external", async (_event, url) => {
+  const { shell } = require("electron");
+  await shell.openExternal(url);
+});
+
+ipcMain.handle("export-pdf", async () => {
+  const result = await dialog.showSaveDialog(mainWindow, {
+    title: "Export to PDF",
+    defaultPath: "document.pdf",
+    filters: [{ name: "PDF", extensions: ["pdf"] }],
+  });
+  if (!result.canceled && result.filePath) {
+    try {
+      const data = await mainWindow.webContents.printToPDF({
+        printBackground: true,
+        marginsType: 0,
+      });
+      fs.writeFileSync(result.filePath, data);
+      return { success: true, path: result.filePath };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+  return null;
 });
 
 ipcMain.on("safe-to-close", () => {
