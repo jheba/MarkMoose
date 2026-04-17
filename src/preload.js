@@ -10,7 +10,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   saveFile: (filePath, content) => ipcRenderer.invoke("save-file", filePath, content),
   saveFileDialog: (content) => ipcRenderer.invoke("save-file-dialog", content),
   getVersion: () => ipcRenderer.invoke("get-version"),
-  showSavePrompt: () => ipcRenderer.invoke("show-save-prompt"),
+  showSavePrompt: (fileName) => ipcRenderer.invoke("show-save-prompt", fileName),
   confirmClose: () => ipcRenderer.send("safe-to-close"),
   openExternal: (url) => ipcRenderer.invoke("open-external", url),
   openImageDialog: () => ipcRenderer.invoke("open-image-dialog"),

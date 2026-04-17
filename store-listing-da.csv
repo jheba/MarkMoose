@@ -1,0 +1,104 @@
+Field,ID,Type (Type),default,en-us,da
+Description,2,Text,,"MarkMoose is a desktop Markdown editor built for speed and simplicity. Write, preview, and navigate your Markdown files with a clean, distraction-free interface.
+
+FEATURES
+
+• Live split-view editor — edit on the left, see the rendered result on the right
+• Draggable split divider — resize editor and preview to your preference
+• Tabs — open multiple documents at once
+• Table of contents — auto-generated outline sidebar with click-to-navigate
+• Dark mode — easy on the eyes, with persistent preference
+• Editor formatting toolbar — bold, italic, headings, links, code, lists, tables and more
+• Drag & drop — drop .md files onto the window to open them
+• File association — after install, .md files open directly in MarkMoose
+• Save prompt — warns you before closing unsaved work
+• Word and line count
+
+MARKDOWN SUPPORT
+
+• Headings, bold, italic, strikethrough
+• Ordered and unordered lists, task lists
+• Links, images, tables
+• Blockquotes, horizontal rules
+• Fenced code blocks with syntax highlighting (JavaScript, Python, C#, SQL, and 180+ languages)
+• Mermaid diagrams — flowcharts, sequence diagrams, Gantt charts, and more
+• GitHub-style alerts — NOTE, TIP, IMPORTANT, WARNING, CAUTION
+• Footnotes with back-links
+• YAML frontmatter — rendered as a metadata table
+• LaTeX math — inline and block equations via KaTeX
+
+KEYBOARD SHORTCUTS
+
+Ctrl+S Save | Ctrl+O Open | Ctrl+B Bold | Ctrl+I Italic | Ctrl+K Link
+
+MarkMoose is free, open source, and built with Electron and React.","MarkMoose er en desktop Markdown-editor bygget til hastighed og enkelhed. Skriv, forhåndsvis og naviger i dine Markdown-filer med en ren og overskuelig brugerflade.
+
+FUNKTIONER
+
+• Live split-view editor — rediger i venstre side, se resultatet i højre side
+• Justerbar opdeling — træk skillelinjen for at tilpasse editor og forhåndsvisning
+• Faner — åbn flere dokumenter på samme tid
+• Indholdsfortegnelse — automatisk genereret oversigt med klik-til-navigation
+• Mørk tilstand — skånsom for øjnene, med husket præference
+• Formateringsværktøjslinje — fed, kursiv, overskrifter, links, kode, lister, tabeller og mere
+• Træk og slip — slip .md-filer på vinduet for at åbne dem
+• Filtilknytning — efter installation åbnes .md-filer direkte i MarkMoose
+• Gem-advarsel — advarer før lukning af ikke-gemte ændringer
+• Ord- og linjetæller
+
+MARKDOWN-UNDERSTØTTELSE
+
+• Overskrifter, fed, kursiv, gennemstreget
+• Ordnede og uordnede lister, opgavelister
+• Links, billeder, tabeller
+• Citater, vandrette linjer
+• Kodeblokke med syntaksfremhævning (JavaScript, Python, C#, SQL og 180+ sprog)
+• Mermaid-diagrammer — flowcharts, sekvensdiagrammer, Gantt-diagrammer og mere
+• GitHub-stilede advarsler — NOTE, TIP, IMPORTANT, WARNING, CAUTION
+• Fodnoter med tilbagelinks
+• YAML frontmatter — vist som metadatatabel
+• LaTeX matematik — inline og blok-ligninger via KaTeX
+
+TASTATURGENVEJE
+
+Ctrl+S Gem | Ctrl+O Åbn | Ctrl+B Fed | Ctrl+I Kursiv | Ctrl+K Link
+
+MarkMoose er gratis, open source og bygget med Electron og React."
+ReleaseNotes,3,Text,,"New File (Ctrl+T) — creates a new tab from File menu
+Save As (Ctrl+Shift+S) — save to a new file
+Export to PDF (Ctrl+P) — exports rendered markdown to PDF (print only the content, not the UI)
+Insert Image — toolbar button opens file picker for images","Ny fil (Ctrl+T) — opretter en ny fane fra Fil-menuen
+Gem som (Ctrl+Shift+S) — gem til en ny fil
+Eksporter til PDF (Ctrl+P) — eksporterer renderet markdown til PDF (kun indholdet, ikke brugerfladen)
+Indsæt billede — værktøjslinjeknap åbner filvælger til billeder"
+Title,4,Text,,MarkMoose Markdown Editor,MarkMoose Markdown Editor
+ShortTitle,5,Text,,,
+SortTitle,6,Text,,,
+VoiceTitle,7,Text,,,
+ShortDescription,8,Text,,"A fast, beautiful Markdown editor with live preview, tabs, dark mode, and Mermaid diagram support.","En hurtig og elegant Markdown-editor med live forhåndsvisning, faner, mørk tilstand og Mermaid-diagrammer."
+DevStudio,9,Text,,Morten Rasmussen,Morten Rasmussen
+CopyrightTrademarkInformation,12,Text,,Copyright 2026 Morten Rasmussen. All rights reserved.,"Copyright 2026 Morten Rasmussen. Alle rettigheder forbeholdes."
+AdditionalLicenseTerms,13,Text,,,
+DesktopScreenshot1,100,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9NJPG77756D4/submissions/1152921505700874788/listings/1152922700024645790/listingassets/3024212709222865501,https://developer.microsoft.com/en-us/dashboard/apps/9NJPG77756D4/submissions/1152921505700874788/listings/1152922700024645790/listingassets/3024212709222865501
+DesktopScreenshot2,101,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9NJPG77756D4/submissions/1152921505700874788/listings/1152922700024645790/listingassets/3026823644139158182,https://developer.microsoft.com/en-us/dashboard/apps/9NJPG77756D4/submissions/1152921505700874788/listings/1152922700024645790/listingassets/3026823644139158182
+DesktopScreenshot3,102,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9NJPG77756D4/submissions/1152921505700874788/listings/1152922700024645790/listingassets/3059173836618428331,https://developer.microsoft.com/en-us/dashboard/apps/9NJPG77756D4/submissions/1152921505700874788/listings/1152922700024645790/listingassets/3059173836618428331
+DesktopScreenshotCaption1,150,Text,,"Split view with table of contents sidebar, syntax highlighting, and instant Markdown preview","Split-visning med indholdsfortegnelse, syntaksfremhævning og øjeblikkelig Markdown-forhåndsvisning"
+DesktopScreenshotCaption2,151,Text,,"Split view editor with YAML frontmatter, formatting toolbar, and live preview in dark mode","Split-visning editor med YAML frontmatter, formateringsværktøjslinje og live forhåndsvisning i mørk tilstand"
+DesktopScreenshotCaption3,152,Text,,"Dark mode with Mermaid diagrams, GitHub-style alerts, footnotes, and LaTeX math rendering","Mørk tilstand med Mermaid-diagrammer, GitHub-stilede advarsler, fodnoter og LaTeX matematik-rendering"
+StoreLogo300x300,602,Relative path (or URL to file in Partner Center),,https://developer.microsoft.com/en-us/dashboard/apps/9NJPG77756D4/submissions/1152921505700874788/listings/1152922700024645790/listingassets/3053326593708758725,https://developer.microsoft.com/en-us/dashboard/apps/9NJPG77756D4/submissions/1152921505700874788/listings/1152922700024645790/listingassets/3053326593708758725
+OverrideLogosForWin10,603,True/False,,False,False
+Feature1,700,Text,,Live split-view editor with instant preview,Live split-view editor med øjeblikkelig forhåndsvisning
+Feature2,701,Text,,Syntax highlighting for 180+ languages,Syntaksfremhævning for 180+ programmeringssprog
+Feature3,702,Text,,Mermaid diagram support,Mermaid-diagrammer
+Feature4,703,Text,,Dark mode,Mørk tilstand
+Feature5,704,Text,,Tabs for multiple documents,Faner til flere dokumenter
+Feature6,705,Text,,GitHub-style alerts and footnotes,GitHub-stilede advarsler og fodnoter
+Feature7,706,Text,,LaTeX math rendering,LaTeX matematik-rendering
+Feature8,707,Text,,YAML frontmatter support,YAML frontmatter-understøttelse
+SearchTerm1,900,Text,,markdown editor,markdown editor
+SearchTerm2,901,Text,,markdown tabs support,markdown faner
+SearchTerm3,902,Text,,markdown viewer,markdown viewer
+SearchTerm4,903,Text,,md editor,tekst editor
+SearchTerm5,904,Text,,mermaid diagrams,mermaid diagrammer
+SearchTerm6,905,Text,,live markdown editor,markdown forhåndsvisning
+SearchTerm7,906,Text,,markdown,mørk tilstand editor

@@ -194,10 +194,12 @@ export default function MarkdownViewer() {
   const draggingRef = useRef(false);
   const mainRef = useRef(null);
   const tabsRef = useRef(tabs);
+  const activeTabIdRef = useRef(activeTabId);
   const syncingScroll = useRef(false);
 
   // keep ref in sync for async callbacks
   useEffect(() => { tabsRef.current = tabs; }, [tabs]);
+  useEffect(() => { activeTabIdRef.current = activeTabId; }, [activeTabId]);
 
   const t = isDark ? dark : light;
 
@@ -205,15 +207,28 @@ export default function MarkdownViewer() {
   const tab = tabs.find(t => t.id === activeTabId) || tabs[0];
   const [md, setMdState] = useState(tab.md);
   const mdTimerRef = useRef(null);
+  const suppressDirtyRef = useRef(false);
 
-  // sync editor content to tab state (debounced)
+  // sync editor content to tab state (debounced for md, immediate for dirty)
   const setMd = useCallback((val) => {
     setMdState(val);
+    if (!suppressDirtyRef.current) {
+      // set dirty immediately so close handler sees it
+      setTabs(ts => ts.map(t => t.id === activeTabId ? { ...t, dirty: true } : t));
+    }
     if (mdTimerRef.current) clearTimeout(mdTimerRef.current);
     mdTimerRef.current = setTimeout(() => {
       setTabs(ts => ts.map(t => t.id === activeTabId ? { ...t, md: val } : t));
     }, 500);
   }, [activeTabId]);
+
+  // helper to set editor value without triggering dirty flag
+  const setEditorValue = useCallback((value) => {
+    if (!editorRef.current) return;
+    suppressDirtyRef.current = true;
+    editorRef.current.value = value;
+    suppressDirtyRef.current = false;
+  }, []);
 
   // sync from tabs when switching tabs or opening files
   const prevTabId = useRef(activeTabId);
@@ -221,7 +236,7 @@ export default function MarkdownViewer() {
     if (activeTabId !== prevTabId.current) {
       prevTabId.current = activeTabId;
       setMdState(tab.md);
-      if (editorRef.current) editorRef.current.value = tab.md;
+      setEditorValue(tab.md);
     }
   }, [activeTabId, tab.md]);
 
@@ -231,7 +246,7 @@ export default function MarkdownViewer() {
     if (tab.md !== prevTabMd.current && tab.md !== md) {
       prevTabMd.current = tab.md;
       setMdState(tab.md);
-      if (editorRef.current) editorRef.current.value = tab.md;
+      setEditorValue(tab.md);
     }
   }, [tab.md]);
 
@@ -304,25 +319,32 @@ export default function MarkdownViewer() {
   useEffect(() => {
     if (!window.electronAPI?.onCheckBeforeClose) return;
     window.electronAPI.onCheckBeforeClose(async () => {
-      const currentTabs = tabsRef.current;
+      // flush latest editor content to tabs before checking
+      const currentTabs = tabsRef.current.map(t => {
+        if (t.id === activeTabIdRef.current && editorRef.current) {
+          return { ...t, md: editorRef.current.value };
+        }
+        return t;
+      });
       const dirtyTabs = currentTabs.filter(t => t.dirty);
       if (dirtyTabs.length === 0) {
         window.electronAPI.confirmClose();
         return;
       }
-      const result = await window.electronAPI.showSavePrompt();
-      if (result === 0) {
-        for (const dt of dirtyTabs) {
+      for (const dt of dirtyTabs) {
+        const result = await window.electronAPI.showSavePrompt(dt.fileName || "Untitled");
+        if (result === 0) { // Save
           if (dt.filePath) {
             await window.electronAPI.saveFile(dt.filePath, dt.md);
           } else {
             await window.electronAPI.saveFileDialog(dt.md);
           }
+        } else if (result === 2) { // Cancel — stop closing
+          return;
         }
-        window.electronAPI.confirmClose();
-      } else if (result === 1) {
-        window.electronAPI.confirmClose();
+        // result === 1 (Don't Save) — continue to next tab
       }
+      window.electronAPI.confirmClose();
     });
   }, []);
 
@@ -401,7 +423,7 @@ export default function MarkdownViewer() {
     const tabToClose = currentTabs.find(t => t.id === id);
     if (tabToClose?.dirty && window.electronAPI?.showSavePrompt) {
       setActiveTabId(id);
-      const result = await window.electronAPI.showSavePrompt();
+      const result = await window.electronAPI.showSavePrompt(tabToClose.fileName || "Untitled");
       if (result === 0) { // Save
         if (tabToClose.filePath) {
           const r = await window.electronAPI.saveFile(tabToClose.filePath, tabToClose.md);
@@ -552,8 +574,7 @@ export default function MarkdownViewer() {
 
   const handleChange = useCallback((e) => {
     setMd(e.target.value);
-    setDirty(true);
-  }, []);
+  }, [setMd]);
 
   // find matches
   const findMatches = useMemo(() => {

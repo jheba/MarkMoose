@@ -340,14 +340,15 @@ ipcMain.on("safe-to-close", () => {
   }
 });
 
-ipcMain.handle("show-save-prompt", async () => {
+ipcMain.handle("show-save-prompt", async (_event, fileName) => {
+  const name = fileName || "Untitled";
   const result = await dialog.showMessageBox(mainWindow, {
     type: "warning",
     buttons: ["Save", "Don't Save", "Cancel"],
     defaultId: 0,
     cancelId: 2,
     title: "Unsaved Changes",
-    message: "You have unsaved changes. Do you want to save before continuing?",
+    message: `"${name}" has unsaved changes. Do you want to save?`,
   });
   return result.response;
 });
