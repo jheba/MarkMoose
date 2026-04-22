@@ -559,6 +559,7 @@ export default function MarkdownViewer() {
 
   useEffect(() => {
     const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === "t") { e.preventDefault(); addTab(); }
       if ((e.ctrlKey || e.metaKey) && e.key === "s") { e.preventDefault(); handleSave(); }
       if ((e.ctrlKey || e.metaKey) && e.key === "f") {
         e.preventDefault();
@@ -571,7 +572,7 @@ export default function MarkdownViewer() {
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [handleSave, showFind]);
+  }, [addTab, handleSave, showFind]);
 
   const handleChange = useCallback((e) => {
     setMd(e.target.value);
@@ -777,7 +778,7 @@ export default function MarkdownViewer() {
               <div style={s.helpSectionTitle}>Keyboard Shortcuts</div>
               <div style={s.helpGrid}>
                 {[
-                  ["Ctrl+S", "Save file"], ["Ctrl+O", "Open file"], ["Ctrl+N", "New window"],
+                  ["Ctrl+T", "New tab"], ["Ctrl+S", "Save file"], ["Ctrl+O", "Open file"], ["Ctrl+N", "New window"],
                   ["Ctrl+B", "Bold selection"], ["Ctrl+I", "Italic selection"], ["Ctrl+K", "Insert link"],
                   ["Ctrl+F", "Find in document"],
                   ["Ctrl+P", "Export to PDF"], ["Ctrl++", "Zoom in"], ["Ctrl+-", "Zoom out"], ["Ctrl+0", "Reset zoom"], ["F11", "Fullscreen"],
